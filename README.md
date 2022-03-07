@@ -18,9 +18,7 @@ The following script should also be run for `IO=target`:
 
 ```bash
 DATASET=train && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lqsum/data/cnndm_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
-
 DATASET=dev && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lqsum/data/cnndm_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
-
 DATASET=test && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lqsum/data/cnndm_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
 ```
 
@@ -29,9 +27,7 @@ DATASET=test && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lq
 The following script should also be run for `IO=query`:
 ```bash
 DATASET=test && IO=source && RAW=~/lqsum/data/wikiref/${DATASET}.${IO} && TGT=~/lqsum/data/wikiref_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
-
 DATASET=2007 && IO=source && RAW=~/lqsum/data/duc/duc_${DATASET}.ranked.lines/duc_${DATASET}.${IO} && TGT=~/lqsum/data/duc_bpe/origin/duc_${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
-
 DATASET=tdqfs && IO=source && RAW=~/lqsum/data/${DATASET}/${DATASET}.ranked.lines/${DATASET}.${IO} && TGT=~/lqsum/data/${DATASET}_bpe/qe/${DATASET}.bpe.source && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
 ```
 
@@ -64,25 +60,13 @@ cd ~/lqsum/guided_summarization/bart && sh lqsum_train_main.sh ~/lqsum/data/cnnd
 To train models for ablation study, replace `lqsum_train_main.sh` with `lqsum_train_ablation_[ABLATION-NAME].sh`, with `ABLATION-NAME` from `{dual_view, joint_training, posterior_dropout, weak_supervision}`.
 
 ## Decoding
-Following are the commands for summary decoding on various test sets. 
+Following are the commands for summary decoding on various test sets: WikiRef, Debatepedia, DUC, and TD-QFS. 
+We set `TAG_MODE=query_11` to inject query into decoding via belief update.
 
-WikiRef:
 ```bash
 DATASET=wikiref && MODEL_ID=64 && CKPT=10 && GUID_NAME=with_bpe_lcs_tags && TAG_MODE=query_11 && MODEL_DIR=~/lqsum/model/model_${MODEL_ID}-bpeTags && MODEL_NAME=checkpoint${CKPT}.pt && BART_OUT_NAME=model_${MODEL_ID}_${CKPT}-bpeTags-wikiref_test-source-${GUID_NAME}.${TAG_MODE}.min35max90 && SRC=~/lqsum/data/${DATASET}/test.source && GUIDANCE=~/lqsum/data/${DATASET}_prior/${GUID_NAME}/test.source.bu/test.source.bu.txt && RESULT_PATH=~/lqsum/bart_out/${BART_OUT_NAME} && DATA_BIN=~/lqsum/data/cnndm_bin/source_guidance_with_bpe_lcs_tags && CUDA_VISIBLE_DEVICES=0,1 . z_test_with_query_tags.sh $SRC $GUIDANCE $RESULT_PATH $MODEL_DIR $MODEL_NAME $DATA_BIN $TAG_MODE
-```
-
-Debatepedia:
-```bash
 DATASET=debatepedia && MODEL_ID=64 && CKPT=10 && GUID_NAME=with_bpe_lcs_tags && TAG_MODE=query_11 && MODEL_DIR=~/lqsum/model/model_${MODEL_ID}-bpeTags && MODEL_NAME=checkpoint${CKPT}.pt && BART_OUT_NAME=model_${MODEL_ID}_${CKPT}-bpeTags-${DATASET}_test-source-${GUID_NAME}.${TAG_MODE}.min5max25 && SRC=~/lqsum/data/${DATASET}/test.source && GUIDANCE=~/lqsum/data/${DATASET}_prior/${GUID_NAME}/test.source.bu/test.source.bu.txt && RESULT_PATH=~/lqsum/bart_out/${BART_OUT_NAME} && DATA_BIN=~/lqsum/data/cnndm_bin/source_guidance_with_bpe_lcs_tags && CUDA_VISIBLE_DEVICES=0,1 . z_test_with_query_tags.sh $SRC $GUIDANCE $RESULT_PATH $MODEL_DIR $MODEL_NAME $DATA_BIN $TAG_MODE
-```
-
-DUC:
-```bash
 DATASET=duc_2007 && MODEL_ID=64 && CKPT=10 && GUID_NAME=with_bpe_lcs_tags_marge && TAG_MODE=query_11 && MIN_MAX=min300max400 && MODEL_DIR=~/lqsum/model/model_${MODEL_ID}-bpeTags && MODEL_NAME=checkpoint${CKPT}.pt && BART_OUT_NAME=model_${MODEL_ID}_${CKPT}-bpeTags-${DATASET}-source-${GUID_NAME}.${TAG_MODE}.${MIN_MAX} && SRC=~/lqsum/data/duc/${DATASET}.marge.lines/${DATASET}.source && GUIDANCE=~/lqsum/data/duc_prior/${GUID_NAME}/${DATASET}.source.bu/${DATASET}.source.bu.txt && RESULT_PATH=~/lqsum/bart_out/${BART_OUT_NAME} && DATA_BIN=~/lqsum/data/cnndm_bin/source_guidance_with_bpe_lcs_tags && CUDA_VISIBLE_DEVICES=0,1 . z_test_with_query_tags.sh $SRC $GUIDANCE $RESULT_PATH $MODEL_DIR $MODEL_NAME $DATA_BIN $TAG_MODE
-```
-
-TD-QFS:
-```bash
 DATASET=tdqfs && MODEL_ID=64 && CKPT=10 && GUID_NAME=with_bpe_lcs_tags_and_qe_3 && TAG_MODE=query_11 && MIN_MAX=min10max60 && MODEL_DIR=~/lqsum/model/model_${MODEL_ID}-bpeTags && MODEL_NAME=checkpoint${CKPT}.pt && BART_OUT_NAME=model_${MODEL_ID}_${CKPT}-bpeTags-${DATASET}-source-${GUID_NAME}.${TAG_MODE}.${MIN_MAX} && SRC=~/lqsum/data/tdqfs/${DATASET}.ranked.lines/${DATASET}.source && GUIDANCE=~/lqsum/data/${DATASET}_prior/${GUID_NAME}/${DATASET}.source.bu/${DATASET}.source.bu.txt && RESULT_PATH=~/lqsum/bart_out/${BART_OUT_NAME} && DATA_BIN=~/lqsum/data/cnndm_bin/source_guidance_with_bpe_lcs_tags && CUDA_VISIBLE_DEVICES=0,1 . z_test_with_query_tags.sh $SRC $GUIDANCE $RESULT_PATH $MODEL_DIR $MODEL_NAME $DATA_BIN $TAG_MODE
 ```
 
