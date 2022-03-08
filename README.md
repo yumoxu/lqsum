@@ -9,22 +9,20 @@ Should you have any query please contact me at [yumo.xu@ed.ac.uk](mailto:mailto:
 
 
 ## Data Construction
-Our model operates over BPEs. To build data for training and testing, the first step is to do BPE.
+Our model operates over BPEs. 
+To build data for training and testing, the first step is to do BPE.
 
 ### BPE
-1. For our training set, CNN/DM, we need to BPE source document and target summary (as query is not accessible):
-
-The following script should also be run for `IO=target`:
+1. For our training set, CNN/DM, we need to BPE source document and target summary (as query is not accessible). The following script should be run for `IO=[source|target]`:
 
 ```bash
 DATASET=train && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lqsum/data/cnndm_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
-DATASET=dev && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lqsum/data/cnndm_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
+DATASET=val && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lqsum/data/cnndm_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
 DATASET=test && IO=source && RAW=~/lqsum/data/cnndm/${DATASET}.${IO} && TGT=~/lqsum/data/cnndm_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
 ```
 
-2. For our test set, we need to BPE source document and query (as target summary is not available). 
+2. For our test set, we need to BPE source document and query (as target summary is not available). The following script should be run for `IO=[source|query]`:
 
-The following script should also be run for `IO=query`:
 ```bash
 DATASET=test && IO=source && RAW=~/lqsum/data/wikiref/${DATASET}.${IO} && TGT=~/lqsum/data/wikiref_bpe/origin/${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
 DATASET=2007 && IO=source && RAW=~/lqsum/data/duc/duc_${DATASET}.ranked.lines/duc_${DATASET}.${IO} && TGT=~/lqsum/data/duc_bpe/origin/duc_${DATASET}.bpe.${IO} && cd ~/lqsum/guided_summarization/bart && . z_bpe.sh ${RAW} ${TGT}
@@ -40,7 +38,7 @@ Replace `cnndm_bpe` with, e.g., `wikiref_bpe` for test sets.
 ### Binarize 
 Training data need to be binarized for efficieny training. 
 
-We first move the data to be binarized from `data/cnndm_guide_source` to `data/cnndm_bpe`. Use the following command for `DATASET=train,dev,test`:
+We first move the data to be binarized from `data/cnndm_guide_source` to `data/cnndm_bpe`. Use the following command for `DATASET=[train|val|test]`:
 
 ```bash
 DATASET=train && GUID_ROOT=~/lqsum/data/cnndm_guide_source/with_bpe_lcs_tags/${DATASET}.source.bu && BPE_ROOT=~/lqsum/data/cnndm_bpe/source_guidance_with_bpe_lcs_tags && cp ${GUID_ROOT}/${DATASET}.source.bu.src ${BPE_ROOT}/${DATASET}.bpe.z && cp ${GUID_ROOT}/${DATASET}.source.bu.tgt ${BPE_ROOT}/${DATASET}.bpe.tag
@@ -77,4 +75,4 @@ Use the following command of evaluating summaries for WikiRef:
 MODEL_ID=64 && CKPT=10 TAG_MODE=query_11 && sh src/cal_rouge.sh model_${MODEL_ID}_${CKPT}-bpeTags-wikiref_test-source-with_bpe_lcs_tags.${TAG_MODE}.min35max90 wikiref
 ```
 
-For other test sets, simply replace `wikiref` as with `{debatepedia, duc2006, duc_2007, tdqfs}` and the second parameter to the corresponding summary output path.
+For other test sets, simply replace `wikiref` as with `{debatepedia, duc2006, duc2007, tdqfs}` and the second parameter to the corresponding summary output path.
