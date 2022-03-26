@@ -31,17 +31,10 @@ def deprecated(func):
 
 
 class PathParser:
-    def __init__(self, path_type):
-        self.remote_root = Path('/disk/nfs/ostrom/s1617290')
+    def __init__(self):
+        self.remote_root = Path('~')
         self.proj_name = 'lqsum'
-
-        if path_type == 'local':
-            self.proj_root = Path(f'/Users/KevinXU/programming/git_yumoxu/{self.proj_name}')
-        elif path_type == 'afs':
-            self.proj_root = self.remote_root / self.proj_name
-        else:
-            raise ValueError(f'Invalid path_type: {path_type}')
-
+        self.proj_root = self.remote_root / self.proj_name
         print(f'Set proj_root to: {self.proj_root}')
         
         self.performances = self.proj_root / 'performances'
@@ -100,7 +93,6 @@ class PathParser:
         self.mturk = self.proj_root / 'mturk'
 
         self.afs_rouge_dir = self.remote_root / 'ROUGE-1.5.5' / 'data'
-        self.local_rouge_dir = '/Users/KevinXU/Programming/git_yumoxu/pyrouge/RELEASE-1.5.5/data'
 
 
 config_root = Path(os.path.dirname(os.path.dirname(__file__))) / 'config'
@@ -108,12 +100,11 @@ config_root = Path(os.path.dirname(os.path.dirname(__file__))) / 'config'
 # meta
 config_meta_fp = config_root / 'config_meta.yml'
 config_meta = yaml.load(open(config_meta_fp, 'r', encoding='utf-8'), Loader=yaml.FullLoader)
-path_type = config_meta['path_type']
 mode = config_meta['mode']
 debug = config_meta['debug']
 grain = config_meta['grain']
 
-path_parser = PathParser(path_type=path_type)
+path_parser = PathParser()
 
 # model
 meta_model_name = config_meta['model_name']

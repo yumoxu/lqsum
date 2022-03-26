@@ -10,6 +10,7 @@ import utils.tools as tools
 from pathlib import Path
 import logging
 
+
 def get_rouge_2_recall(output):
     start_pat = '1 ROUGE-2 Average'
 
@@ -36,69 +37,17 @@ def get_rouge_2_recall(output):
     return recall
 
 
-def compute_rouge_2_recall_for_multinews_sentence(sentence, summary, temp_dir: Path):
-    """
-        sentence: target multinews sentence
-        summary: reference summary to compute ROUGE against
-        temp_dir: temp dir for computing ROUGE
-        save_fp: save fp for ROUGE-2 results: Recall\tF1
-    """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {} -x'.format(path_parser.afs_rouge_dir)
-    else:
-        rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {} -x'.format('/Users/KevinXU/programming/git_yumoxu/pyrouge')  # standard nist eval
-
-    sent_dp = temp_dir / 'sentence'
-    summary_dp = temp_dir / 'summary'
-    
-    if not exists(sent_dp):
-        os.mkdir(sent_dp)
-    
-    if not exists(summary_dp):
-        os.mkdir(summary_dp)
-
-    sent_fp =  sent_dp / 'temp'
-    summary_fp = summary_dp / 'temp'
-    open(sent_fp, 'a').write(sentence)
-    open(summary_fp, 'a').write(summary)
-        
-    # r = Rouge155(rouge_args=rouge_args)
-    r = Rouge155(rouge_dir='/Users/KevinXU/programming/git_yumoxu/pyrouge/RELEASE-1.5.5', rouge_args=rouge_args)
-    r.system_dir = sent_dp
-    r.model_dir = summary_dp
-
-    gen_sys_file_pat = '(\w*)'
-    gen_model_file_pat = '#ID#'
-    r.system_filename_pattern = gen_sys_file_pat
-    r.model_filename_pattern = gen_model_file_pat
-
-    output = r.convert_and_evaluate()
-    recall = get_rouge_2_recall(output)
-    os.remove(sent_fp)
-    os.remove(summary_fp)
-    
-    return recall
-
-
 def compute_rouge_for_mn(text_dp, budget=None):
     """
 
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'  # *todo*: double check -l 300
-        if budget:
-            rouge_args += f'-l {budget}'
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir} -x'
-        if budget:
-            rouge_args += f'-l {budget}'
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'  # *todo*: double check -l 300
+    if budget:
+        rouge_args += f'-l {budget}'
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
 
     r.system_dir = text_dp
     r.model_dir = path_parser.data_mn_summary_targets
@@ -259,22 +208,14 @@ def compute_rouge_for_dev(text_dp, tune_centrality):
         It has been revised according to ShiftSum environments.
 
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
-        if tune_centrality:  # summary length requirement
-            rouge_args += ' -l 250'
+    rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
+    if tune_centrality:  # summary length requirement
+        rouge_args += ' -l 250'
 
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir} -x'
-        if tune_centrality:  # summary length requirement
-            rouge_args += ' -l 250'
-        
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
 
     r.system_dir = text_dp
     r.model_dir = join(path_parser.data_summary_targets, config.test_year)
@@ -297,17 +238,12 @@ def compute_rouge_for_cont_sel_in_sentences(text_dp):
         It has been revised according to ShiftSum environments.
 
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
+    rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
 
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir} -x'
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
 
     r.system_dir = text_dp
     r.model_dir = join(path_parser.data_summary_targets, config.test_year)
@@ -330,17 +266,12 @@ def compute_rouge_for_cont_sel_in_sentences_tdqfs(text_dp, ref_dp):
         It has been revised according to ShiftSum environments.
 
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
+    rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
 
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir} -x'
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
 
     r.system_dir = text_dp
     r.model_dir = ref_dp
@@ -363,16 +294,12 @@ def compute_rouge_for_cont_sel(text_dp, n_words):
         It has been revised according to ShiftSum environments.
 
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x -l {n_words}'
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir} -x -l {n_words}'
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    rouge_args = f'-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x -l {n_words}'
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
+
 
     r.system_dir = text_dp
     r.model_dir = join(path_parser.data_summary_targets, config.test_year)
@@ -395,16 +322,11 @@ def compute_rouge(model_name, n_iter=None, diversity_param_tuple=None, cos_thres
         It has been revised according to ShiftSum environments.
 
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -l 250 -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -l 250 -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir} -x'
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    rouge_args = f'-a -l 250 -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
 
     baselines_wo_config = ['lead', 'lead-2006', 'lead-2007', 'lead_2007']
     if model_name in baselines_wo_config or model_name.startswith('duc'):
@@ -432,12 +354,8 @@ def compute_rouge(model_name, n_iter=None, diversity_param_tuple=None, cos_thres
 
 
 def compute_rouge_for_ablation_study(text_dp):
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = '-a -l 250 -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {} -x'.format(
-            path_parser.afs_rouge_dir)
-
-    else:
-        rouge_args = '-a -l 250 -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
+    rouge_args = '-a -l 250 -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {} -x'.format(
+        path_parser.afs_rouge_dir)
 
     r = Rouge155(rouge_args=rouge_args)
     r.system_dir = text_dp
@@ -459,11 +377,7 @@ def compute_rouge_abs(text_dp, split_sentences, max_len=250, eval_mn=False):
         eval_mn: determines model_dir
     
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
-
-    else:
-        rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
+    rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
 
     r = Rouge155(rouge_args=rouge_args)
     r.system_dir = text_dp
@@ -487,11 +401,7 @@ def compute_rouge_abs_f1(text_dp, split_sentences, max_len=250, eval_mn=False):
         eval_mn: determines model_dir
     
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
-
-    else:
-        rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
+    rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
 
     r = Rouge155(rouge_args=rouge_args)
     r.system_dir = text_dp
@@ -514,10 +424,7 @@ def compute_rouge_lqsum(text_dp, ref_dp, split_sentences, max_len=250, verbose_o
         For project LQSum.
     
     """
-    if config.path_type == 'afs':
-        rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
-    else:
-        rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
+    rouge_args = f'-a -l {max_len} -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
 
     r = Rouge155(rouge_args=rouge_args)
     r.system_dir = text_dp
@@ -540,10 +447,7 @@ def compute_rouge_lqsum_per_file(text_dp, ref_dp, text_fn, split_sentences, max_
         For project LQSum.
     
     """
-    if config.path_type == 'afs':
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
-    else:
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
+    rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
 
     if max_len:
         rouge_args += f' -l {max_len}'
@@ -565,23 +469,13 @@ def compute_rouge_lqsum_per_file(text_dp, ref_dp, text_fn, split_sentences, max_
 
 
 def compute_rouge_for_tdqfs(text_dp, ref_dp, length):
-    """
-        # TODO double check
-    """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
-        if length:
-            rouge_args += f' -l {length}'
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir} -x'
-        if length:
-            rouge_args += f' -l {length}'
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir} -x'
+    if length:
+        rouge_args += f' -l {length}'
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
 
     r.system_dir = text_dp
     r.model_dir = ref_dp
@@ -601,20 +495,13 @@ def compute_rouge_for_eli5(text_dp, ref_dp, length):
     """
 
     """
-    if config.path_type == 'afs':  # copied from 2007 with removal of "-l 250"
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir}'
-        if length:
-            rouge_args += f' -l {length}'
-        r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
-                     rouge_args=rouge_args, 
-                     log_level=logging.WARNING, 
-                     config_parent_dir=str(path_parser.remote_root))
-    else:
-        # rouge_args = '-a -n 2 -m -c 95 -r 1000 -f A -p 0.5 -t 0 -d -x'  # standard nist eval
-        rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.local_rouge_dir}'
-        if length:
-            rouge_args += f' -l {length}'
-        r = Rouge155(rouge_args=rouge_args, log_level=logging.WARNING)
+    rouge_args = f'-a -n 2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -d -e {path_parser.afs_rouge_dir}'
+    if length:
+        rouge_args += f' -l {length}'
+    r = Rouge155(rouge_dir=str(path_parser.remote_root / 'ROUGE-1.5.5'),
+                    rouge_args=rouge_args, 
+                    log_level=logging.WARNING, 
+                    config_parent_dir=str(path_parser.remote_root))
 
     r.system_dir = text_dp
     r.model_dir = ref_dp

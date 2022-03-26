@@ -797,9 +797,6 @@ class GuidedBARTModelwithTagging(GuidedTransformerModelwithTagging):
             # we do not do the other way around (treating x as z)
             # because the tags are produced as per z
             # and there could be minor differences between z and x
-            # logger.info(f'src_tokens: {src_tokens}')
-            # logger.info(f'z_tokens: {z_tokens}')
-            # logger.info('---------------------------')
             src_tokens, src_lengths = z_tokens, z_lengths
         
         encoder_out = self.encoder(

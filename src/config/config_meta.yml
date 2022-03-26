@@ -28,4 +28,3 @@ preload_model_tokenizer: True  # True when using pre-trained Bert model: None, q
 # vocab: 'bert'  # bert
 
 grain: 'sent'
-path_type: 'afs'  # afs, local

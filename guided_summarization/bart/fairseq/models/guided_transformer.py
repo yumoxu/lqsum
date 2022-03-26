@@ -1545,27 +1545,20 @@ class GuidedTransformerEncoder(FairseqEncoder):
             raise ValueError('cached_states and cached_embeddings have to set/not set at the same time!')
         
         if use_cache:
-            # print('using cached embeddings and states')
             x, encoder_embedding, encoder_padding_mask = cached_states, cached_embeddings, cached_mask
         else:
             x, encoder_embedding = self.forward_embedding(src_tokens)
             x = x.transpose(0, 1)  # B x T x C -> T x B x C
             # compute padding mask
-            # print(f'src_tokens: {src_tokens}')
             encoder_padding_mask = src_tokens.eq(self.padding_idx)
-            # print(f'encoder_padding_mask: {encoder_padding_mask}')
-            # print(f'Construct joint mask for padding & tagging  with tag_mode set to: {tag_mode}')
 
         if is_z and tag_mode in ('pre', 'pre-enc', 'pre_enc') and z_tags is not None:
             # prevent self-attention from attending some tokens
-            # print(f'encoder_padding_mask: {encoder_padding_mask}')
-            # print(f'z_tags: {z_tags}')
             # left padding: 5
             # encoder_padding_mask: 1 1 1 1 1 0 0 0 0 0 (attend 6-10th tokens)
             # z_tags:               1 1 1 1 1 0 1 1 0 0 (attend 6th, 9th, and 10th tokens)
             # z_tags is a subset of encoder_padding_mask so just use z_tags instead
             encoder_padding_mask = z_tags.bool()
-            # print(f'encoder_padding_mask (tagged): {encoder_padding_mask}')
         
         encoder_states = [] if return_all_hiddens else None
 
@@ -1612,24 +1605,8 @@ class GuidedTransformerEncoder(FairseqEncoder):
         if is_z and tag_mode in ('post', 'post_enc', 'post-enc') and z_tags is not None:  
             # prevent decoder from attending some tokens
             encoder_padding_mask = z_tags.bool()
-            print(f'z_tags: {z_tags}')
+            # print(f'z_tags: {z_tags}')
             # print(f'encoder_padding_mask (tagged): {encoder_padding_mask}')
-
-        # encoder_out_nan = torch.sum((x!=x).int())
-        # if encoder_out_nan:
-        #     print(f'encoder_out_nan: {encoder_out_nan}')
-        
-        # encoder_padding_mask_nan = torch.sum((encoder_padding_mask!=encoder_padding_mask).int())
-        # if encoder_padding_mask_nan:
-        #     print(f'encoder_padding_mask_nan: {encoder_padding_mask_nan}')
-
-        # encoder_embedding_nan = torch.sum((encoder_embedding!=encoder_embedding).int())
-        # if encoder_embedding_nan:
-        #     print(f'encoder_embedding_nan: {encoder_embedding_nan}')
-        
-        # encoder_states_nan = torch.sum((encoder_states!=encoder_states).int())
-        # if encoder_states_nan:
-            # print(f'encoder_states_nan: {encoder_states_nan}')
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
